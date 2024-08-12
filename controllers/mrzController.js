@@ -95,29 +95,69 @@ const parseMRZ = (mrz) => {
 };
 
 
-const convertMRZDate = (dateString) => {
-  if (!/^\d{6}$/.test(dateString)) {
-    throw new Error("Invalid MRZ Date Format");
-  }
+// const convertMRZDate = (dateString) => {
+//   if (!/^\d{6}$/.test(dateString)) {
+//     throw new Error("Invalid MRZ Date Format");
+//   }
 
-  // Extract Date components
-  const year = parseInt(dateString.substring(0, 2), 10);
-  const month = parseInt(dateString.substring(2, 4), 10);
-  const day = parseInt(dateString.substring(4, 6), 10);
+//   // Extract Date components
+//   const year = parseInt(dateString.substring(0, 2), 10);
+//   const month = parseInt(dateString.substring(2, 4), 10);
+//   const day = parseInt(dateString.substring(4, 6), 10);
 
-  // Add 2000 to year if necessary
-  const fullYear = year >= 0 && year <= 99 ? 2000 + year : year;
+//   // Add 2000 to year if necessary
+//   const fullYear = year >= 0 && year <= 99 ? 2000 + year : year;
 
   
-  const date = new Date(fullYear, month - 1, day);
+//   const date = new Date(fullYear, month - 1, day);
 
-  // Check if date is valid
+//   // Check if date is valid
+//   if (isNaN(date.getTime())) {
+//     throw new Error("Date invalide");
+//   }
+
+//   return date;
+// };
+
+const convertMRZDate = (dateString) => {
+  if (!/^\d{6}$/.test(dateString)) {
+    throw new Error("Format de date MRZ invalide");
+  }
+
+  // Utiliser la méthode fournie pour obtenir l'année complète
+  const getFullDate = (str) => {
+    let d = new Date();
+    d.setFullYear(d.getFullYear() + 15);
+    let centennial = ("" + d.getFullYear()).substring(2, 4);
+
+    let year;
+    if (str.substring(0, 2) > centennial) {
+      year = "19" + str.substring(0, 2);
+    } else {
+      year = "20" + str.substring(0, 2);
+    }
+
+    return {
+      year: year,
+      month: str.substring(2, 4),
+      day: str.substring(4, 6),
+      original: str,
+    };
+  };
+
+  const { year, month, day } = getFullDate(dateString);
+
+  // Créer l'objet Date
+  const date = new Date(year, month - 1, day);
+
+  // Vérifier si la date est valide
   if (isNaN(date.getTime())) {
     throw new Error("Date invalide");
   }
 
   return date;
 };
+
 
 
 exports.parseMRZ = async (req, res) => {
@@ -133,7 +173,7 @@ exports.parseMRZ = async (req, res) => {
       data: { text },
     } = await Tesseract.recognize(path, "fra");
 
-    // console.log("Text from file: ", text);
+    console.log("Text from file: ", text);
 
     // Cleanup text and Get infos
     const mrzData = text.trim().split("\n").slice(-2).join("\n"); 
